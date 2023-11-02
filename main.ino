@@ -1,11 +1,12 @@
-
+// untested code
+// create file called "DATA.CSV", and add "seconds since 2k,ph,orp,turbididy,tds", and a new line.
+// https://github.com/skysthelimitt/chesapeakebay/
 int tdssensorValue = 0;
 float tdsValue = 0;
 float tdsVoltage = 0;
 //#define SERIAL Serial
 #define sensorPin A1
-
-
+#include "RTClib.h"
 #define VOLTAGE 3.37   //vcc voltage(unit: V)
 #define LED 13         //operating instructions
 #define ArrayLenth  40 //times of collection
@@ -49,8 +50,7 @@ int i;
 #include <SD.h>
 #include <RTClib.h>
 RTC_DS1307 rtc;
-String filename;
-String tfilename;
+
 
 File myFile;
 
@@ -63,20 +63,6 @@ void setup(void) {
     while (1);
   }
   Serial.println("initialization done.");
-  i = 0;
-  while(!filename) {
-      tfilename = "data";
-      tfilename = tfilename + i;
-      tfilename = tfilename + ".csv";
-    if(!SD.exists(tfilename)) {
-      filename = tfilename;
-    }
-    i++;
-  }
-  myFile = SD.open(filename, FILE_WRITE);
- 
-  myFile.println("time since start,ph,orp,turbididy,tds");
-  myFile.close();
   pinMode(LED,OUTPUT);
   pinMode(calPin,OUTPUT);
   // digitalWrite(calPin, LOW);
@@ -193,7 +179,8 @@ void loop(void) {
   lcd.setCursor(6,0);
   lcd.print(tdsval);
   time = millis();
- 
+ DateTime now = rtc.now();
+ time = now.unixtime();
   myFile = SD.open("data.txt", FILE_WRITE);
 if(myFile) {
     myFile.print(time);
@@ -207,7 +194,7 @@ if(myFile) {
     myFile.println(tdsval);
     myFile.close();
 }
-  delay(1000);
+  delay(3600000);
  
 }
 
