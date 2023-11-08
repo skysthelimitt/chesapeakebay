@@ -1,12 +1,16 @@
-// untested code
-// create file called "DATA.CSV", and add "seconds since 2k,ph,orp,turbididy,tds", and a new line.
+// semi untested
+// create file called "DATA.CSV", and add "seconds since 2k,ph,orp,turbididy,tds,temp", and a new line.
 // https://github.com/skysthelimitt/chesapeakebay/
 int tdssensorValue = 0;
 float tdsValue = 0;
 float tdsVoltage = 0;
 //#define SERIAL Serial
 #define sensorPin A1
-#include "RTClib.h"
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#define ONE_WIRE_BUS 4
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
 #define VOLTAGE 3.37   //vcc voltage(unit: V)
 #define LED 13         //operating instructions
 #define ArrayLenth  40 //times of collection
@@ -23,7 +27,7 @@ int pHArray[ArrayLenth];   //Store the average value of the sensor feedback
 int pHArrayIndex = 0;
 #include <LiquidCrystal.h>          //the liquid crystal library contains commands for printing to the display
 
-LiquidCrystal lcd(13, 12, 11, 10, 9, 8);   // tell the RedBoard what pins are connected to the display
+LiquidCrystal lcd(7, 5, 3, 6, 9, 8);   // tell the RedBoard what pins are connected to the display
 
 
 
@@ -34,7 +38,7 @@ bool is_calibrated = false;
 int wait_count = 5;
 int orpArray[ArrayLenth];
 int orpArrayIndex=0;
-
+int tempval;
 float phval;
 int orpval;
 float turbididyval;
@@ -57,11 +61,7 @@ File myFile;
 void setup(void) {  
   Serial.begin(9600);
    Serial.print("Initializing SD card...");
-
-  if (!SD.begin(10)) {
-    Serial.println("initialization failed!");
-    while (1);
-  }
+  SD.begin(10);
   Serial.println("initialization done.");
   pinMode(LED,OUTPUT);
   pinMode(calPin,OUTPUT);
@@ -169,6 +169,7 @@ void loop(void) {
     Serial.println(" ppm");
     tdsval = tdsValue;
   }
+  tempval = sensors.getTempCByIndex(0);
   lcd.clear();
   lcd.setCursor(0, 1);
   lcd.print(phval);
@@ -178,10 +179,10 @@ void loop(void) {
   lcd.print(turbididyval);
   lcd.setCursor(6,0);
   lcd.print(tdsval);
+  lcd.setCursor(12,0);
+  lcd.print(tempval);
   time = millis();
- DateTime now = rtc.now();
- time = now.unixtime();
-  myFile = SD.open("data.txt", FILE_WRITE);
+  myFile = SD.open("data.csv", FILE_WRITE);
 if(myFile) {
     myFile.print(time);
     myFile.print(",");
@@ -191,10 +192,12 @@ if(myFile) {
     myFile.print(",");
     myFile.print(turbididyval);
     myFile.print(",");
-    myFile.println(tdsval);
+    myFile.print(tdsval);
+    myFile.print(",");
+    myFile.println(tempval);
     myFile.close();
 }
-  delay(3600000);
+  delay(1000);
  
 }
 
